@@ -1,0 +1,76 @@
+@import "tailwindcss";
+@source "../../**/*.{js,ts,jsx,tsx}";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --font-size: 15px;
+  --background: #f0fdfa;
+  --foreground: #134e4a;
+  --primary: #0d9488;
+  --primary-foreground: #ffffff;
+  --mint-50: #f0fdfa;
+  --mint-100: #ccfbf1;
+  --mint-500: #14b8a6;
+  --mint-600: #0d9488;
+  --mint-700: #0f766e;
+  --mint-800: #115e59;
+  --radius: 0.75rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-mint-50: var(--mint-50);
+  --color-mint-100: var(--mint-100);
+  --color-mint-500: var(--mint-500);
+  --color-mint-600: var(--mint-600);
+  --color-mint-700: var(--mint-700);
+  --color-mint-800: var(--mint-800);
+}
+
+@layer base {
+  html {
+    font-size: var(--font-size);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-mint-50 text-gray-900 antialiased;
+    font-family:
+      -apple-system,
+      BlinkMacSystemFont,
+      "Apple SD Gothic Neo",
+      "Pretendard",
+      sans-serif;
+    overscroll-behavior: none;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font-size: 16px;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .border-3 {
+    border-width: 3px;
+  }
+
+  .safe-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
