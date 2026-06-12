@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
+import mongoose, { Schema, Document, Model, Types } from "mongoose";
 
 export interface ICustomField {
   label: string;
@@ -7,12 +7,9 @@ export interface ICustomField {
 }
 
 export interface IHandoff extends Document {
-  patientName: string;
-  patientAge: number;
-  patientGender?: "male" | "female";
-  ward?: string;
-  room: string;
-  bed?: string;
+  patientId: Types.ObjectId;
+  recordedBy: Types.ObjectId;
+  acceptedBy?: Types.ObjectId;
   date: Date;
   mealAmount?: "많음" | "보통" | "적음" | null;
   excretionSleep: {
@@ -51,12 +48,13 @@ const CustomFieldSchema = new Schema<ICustomField>(
 
 const HandoffSchema = new Schema<IHandoff>(
   {
-    patientName: { type: String, required: true },
-    patientAge: { type: Number, required: true },
-    patientGender: { type: String, enum: ["male", "female"] },
-    ward: { type: String },
-    room: { type: String, required: true },
-    bed: { type: String },
+    patientId: {
+      type: Schema.Types.ObjectId,
+      ref: "Patient",
+      required: true,
+    },
+    recordedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    acceptedBy: { type: Schema.Types.ObjectId, ref: "User" },
     date: { type: Date, required: true },
     mealAmount: {
       type: String,
@@ -88,7 +86,7 @@ const HandoffSchema = new Schema<IHandoff>(
   { timestamps: true },
 );
 
-HandoffSchema.index({ room: 1, bed: 1, date: 1 }, { unique: true });
+HandoffSchema.index({ patientId: 1, date: 1 }, { unique: true });
 
 const Handoff: Model<IHandoff> =
   mongoose.models.Handoff ??

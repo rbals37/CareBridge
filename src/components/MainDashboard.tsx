@@ -8,21 +8,8 @@ import { UserPlus, Settings } from "lucide-react";
 import MobileShell, { MobileFooter } from "@/components/layout/MobileShell";
 import RecordTab from "@/components/dashboard/RecordTab";
 import ReviewTab from "@/components/dashboard/ReviewTab";
-import {
-  getLocalHandoff,
-  saveLocalHandoff,
-  type StoredHandoff,
-} from "@/lib/client-storage";
 import type { ICustomField } from "@/models/Handoff";
-
-export interface PatientInfo {
-  name: string;
-  age: number;
-  gender: "male" | "female";
-  ward?: string;
-  room: string;
-  bed: string;
-}
+import type { PatientInfo, StoredHandoff, UserInfo } from "@/types";
 
 const EMPTY_HANDOFF: StoredHandoff = {
   mealAmount: "보통",
@@ -36,9 +23,10 @@ const EMPTY_HANDOFF: StoredHandoff = {
 
 interface MainDashboardProps {
   patient: PatientInfo;
+  user: UserInfo;
 }
 
-export default function MainDashboard({ patient }: MainDashboardProps) {
+export default function MainDashboard({ patient, user }: MainDashboardProps) {
   const [activeTab, setActiveTab] = useState<"record" | "review">("record");
   const [today] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState(today);
@@ -56,45 +44,54 @@ export default function MainDashboard({ patient }: MainDashboardProps) {
     setTimeout(() => setToast(null), 2500);
   };
 
+  const parseHandoff = (data: Record<string, unknown>): StoredHandoff => ({
+    mealAmount: data.mealAmount as string | null,
+    excretionSleep: data.excretionSleep as StoredHandoff["excretionSleep"],
+    mobility: data.mobility as string | null,
+    emotion: data.emotion as string | null,
+    medications: data.medications as Record<string, boolean>,
+    memo: data.memo as string,
+    voiceMemoUrl: data.voiceMemoUrl as string | undefined,
+    customFields: (data.customFields as StoredHandoff["customFields"]) ?? [],
+    status: data.status as string,
+  });
+
   const loadHandoff = useCallback(
     async (date: Date) => {
       const iso = startOfDay(date).toISOString();
-      const local = getLocalHandoff(patient.room, patient.bed, iso);
-      if (local) setHandoff({ ...EMPTY_HANDOFF, ...local });
 
       try {
-        const params = new URLSearchParams({
-          date: iso,
-          room: patient.room,
-          bed: patient.bed,
-        });
-        const res = await fetch(`/api/handoffs?${params}`);
-        if (!res.ok) return;
+        const params = new URLSearchParams({ date: iso, patientId: patient.id });
+        const res = await fetch(`/api/handoffs?${params}`, { credentials: "include" });
+
+        if (res.status === 401) {
+          window.location.href = "/login";
+          return;
+        }
+
+        if (!res.ok) {
+          setHandoff(EMPTY_HANDOFF);
+          return;
+        }
+
         const data = await res.json();
         if (data.handoff) {
-          setHandoff({
-            mealAmount: data.handoff.mealAmount,
-            excretionSleep: data.handoff.excretionSleep,
-            mobility: data.handoff.mobility,
-            emotion: data.handoff.emotion,
-            medications: data.handoff.medications,
-            memo: data.handoff.memo,
-            voiceMemoUrl: data.handoff.voiceMemoUrl,
-            customFields: data.handoff.customFields ?? [],
-            status: data.handoff.status,
-          });
-        } else if (!local) {
+          setHandoff(parseHandoff(data.handoff));
+        } else {
           setHandoff(EMPTY_HANDOFF);
         }
       } catch {
-        if (!local) setHandoff(EMPTY_HANDOFF);
+        setHandoff(EMPTY_HANDOFF);
+        showToast("기록을 불러오지 못했습니다");
       }
     },
-    [patient.room, patient.bed],
+    [patient.id],
   );
 
   useEffect(() => {
-    calendarRef.current && (calendarRef.current.scrollLeft = calendarRef.current.scrollWidth);
+    if (calendarRef.current) {
+      calendarRef.current.scrollLeft = calendarRef.current.scrollWidth;
+    }
   }, []);
 
   useEffect(() => {
@@ -105,67 +102,64 @@ export default function MainDashboard({ patient }: MainDashboardProps) {
     data: StoredHandoff,
     status: "handed_off" | "accepted",
   ) => {
-    saveLocalHandoff(patient.room, patient.bed, dateKey, { ...data, status });
+    const res = await fetch("/api/handoffs", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        patientId: patient.id,
+        date: dateKey,
+        status,
+        mealAmount: data.mealAmount,
+        excretionSleep: data.excretionSleep,
+        mobility: data.mobility,
+        emotion: data.emotion,
+        medications: data.medications,
+        memo: data.memo,
+        voiceMemoUrl: data.voiceMemoUrl,
+        customFields: data.customFields ?? [],
+      }),
+    });
 
-    try {
-      const res = await fetch("/api/handoffs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...data,
-          patientName: patient.name,
-          patientAge: patient.age,
-          patientGender: patient.gender,
-          ward: patient.ward,
-          room: patient.room,
-          bed: patient.bed,
-          date: dateKey,
-          status,
-        }),
-      });
-      if (res.ok) {
-        showToast(status === "accepted" ? "인수 확인 완료!" : "저장 완료!");
-        return;
-      }
-    } catch {
-      /* offline */
+    if (res.status === 401) {
+      window.location.href = "/login";
+      return false;
     }
-    showToast("기기에 저장됨 (DB 연결 시 동기화)");
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      showToast(err.error ?? "저장에 실패했습니다");
+      return false;
+    }
+
+    const result = await res.json();
+    if (result.handoff) {
+      setHandoff(parseHandoff(result.handoff));
+    }
+
+    showToast(status === "accepted" ? "인수 확인 완료!" : "저장 완료!");
+    return true;
   };
 
   const handleSave = async (status: "handed_off" | "accepted") => {
     setSaving(true);
     await persistHandoff(handoff, status);
-    setHandoff((prev) => ({ ...prev, status }));
     setSaving(false);
   };
 
   const handleCopyFromYesterday = async () => {
     const yesterday = subDays(selectedDate, 1);
     const iso = startOfDay(yesterday).toISOString();
-    const local = getLocalHandoff(patient.room, patient.bed, iso);
-
-    if (local) {
-      setHandoff({ ...EMPTY_HANDOFF, ...local, memo: "" });
-      showToast("전날 기록을 불러왔습니다");
-      return;
-    }
 
     try {
-      const params = new URLSearchParams({ date: iso, room: patient.room, bed: patient.bed });
-      const res = await fetch(`/api/handoffs?${params}`);
+      const params = new URLSearchParams({ date: iso, patientId: patient.id });
+      const res = await fetch(`/api/handoffs?${params}`, { credentials: "include" });
+
       if (res.ok) {
         const data = await res.json();
         if (data.handoff) {
-          setHandoff({
-            mealAmount: data.handoff.mealAmount,
-            excretionSleep: data.handoff.excretionSleep,
-            mobility: data.handoff.mobility,
-            emotion: data.handoff.emotion,
-            medications: data.handoff.medications,
-            memo: "",
-            customFields: data.handoff.customFields ?? [],
-          });
+          const copied = parseHandoff(data.handoff);
+          setHandoff({ ...copied, memo: "" });
           showToast("전날 기록을 불러왔습니다");
           return;
         }
@@ -204,7 +198,6 @@ export default function MainDashboard({ patient }: MainDashboardProps) {
         ) : undefined
       }
     >
-      {/* Header */}
       <header className="shrink-0 border-b border-gray-100 bg-white px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="mb-3 flex items-center justify-between">
           <h1 className="text-xl font-black text-teal-600">간병잇다</h1>
@@ -237,11 +230,13 @@ export default function MainDashboard({ patient }: MainDashboardProps) {
             <p className="text-xs font-bold text-teal-800">
               {patient.age}세 · {genderLabel} · {patient.room}호 {patient.bed}번
             </p>
+            <p className="text-[10px] font-bold text-gray-500">
+              기록자: {user.name}
+            </p>
           </div>
         </div>
       </header>
 
-      {/* Tabs */}
       <div className="flex shrink-0 border-b border-gray-100 bg-white">
         {(
           [
@@ -253,7 +248,7 @@ export default function MainDashboard({ patient }: MainDashboardProps) {
             key={id}
             type="button"
             onClick={() => setActiveTab(id)}
-            className={`flex-1 py-2.5 text-center border-b-[3px] ${
+            className={`flex-1 border-b-[3px] py-2.5 text-center ${
               activeTab === id
                 ? "border-teal-600 text-teal-700"
                 : "border-transparent text-gray-400"
@@ -265,10 +260,9 @@ export default function MainDashboard({ patient }: MainDashboardProps) {
         ))}
       </div>
 
-      {/* Calendar */}
       <div
         ref={calendarRef}
-        className="shrink-0 overflow-x-auto border-b border-gray-100 bg-gray-50/80 no-scrollbar px-3 py-2.5"
+        className="shrink-0 overflow-x-auto border-b border-gray-100 bg-gray-50/80 px-3 py-2.5 no-scrollbar"
       >
         <div className="flex min-w-max gap-2">
           {dates.map((date) => {
@@ -284,7 +278,9 @@ export default function MainDashboard({ patient }: MainDashboardProps) {
                     : "border-gray-200 bg-white text-gray-500"
                 }`}
               >
-                <span className={`text-[10px] font-black ${selected ? "text-teal-100" : "text-gray-400"}`}>
+                <span
+                  className={`text-[10px] font-black ${selected ? "text-teal-100" : "text-gray-400"}`}
+                >
                   {format(date, "E", { locale: ko })}
                 </span>
                 <span className="text-base font-black">{format(date, "d")}</span>
@@ -294,7 +290,6 @@ export default function MainDashboard({ patient }: MainDashboardProps) {
         </div>
       </div>
 
-      {/* Content */}
       <main className="min-h-0 flex-1 overflow-y-auto bg-gray-50 px-4 py-4">
         {activeTab === "record" ? (
           <RecordTab
@@ -319,7 +314,6 @@ export default function MainDashboard({ patient }: MainDashboardProps) {
         )}
       </main>
 
-      {/* Toast */}
       {toast && (
         <div className="pointer-events-none fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full bg-gray-900/90 px-4 py-2 text-xs font-bold text-white shadow-lg">
           {toast}

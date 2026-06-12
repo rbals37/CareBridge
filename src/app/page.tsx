@@ -2,32 +2,45 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import MainDashboard, { type PatientInfo } from "@/components/MainDashboard";
+import MainDashboard from "@/components/MainDashboard";
 import LoadingScreen from "@/components/ui/LoadingScreen";
-import { getPatient, isLoggedIn } from "@/lib/client-storage";
+import { apiFetch } from "@/lib/api-client";
+import type { PatientInfo, UserInfo } from "@/types";
+
+interface MeResponse {
+  user: UserInfo;
+  patient: PatientInfo | null;
+}
 
 export default function HomePage() {
   const router = useRouter();
   const [patient, setPatient] = useState<PatientInfo | null>(null);
+  const [user, setUser] = useState<UserInfo | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (!isLoggedIn()) {
-      router.replace("/login");
-      return;
+    async function load() {
+      const { data, error, status } = await apiFetch<MeResponse>("/api/auth/me");
+
+      if (status === 401 || error) {
+        router.replace("/login");
+        return;
+      }
+
+      if (!data?.patient) {
+        router.replace("/register");
+        return;
+      }
+
+      setUser(data.user);
+      setPatient(data.patient);
+      setReady(true);
     }
 
-    const stored = getPatient();
-    if (!stored) {
-      router.replace("/register");
-      return;
-    }
-
-    setPatient(stored);
-    setReady(true);
+    load();
   }, [router]);
 
-  if (!ready || !patient) return <LoadingScreen />;
+  if (!ready || !patient || !user) return <LoadingScreen />;
 
-  return <MainDashboard patient={patient} />;
+  return <MainDashboard patient={patient} user={user} />;
 }

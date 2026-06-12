@@ -13,7 +13,7 @@ import {
   Pill,
 } from "lucide-react";
 import { format } from "date-fns";
-import type { StoredHandoff } from "@/lib/client-storage";
+import type { StoredHandoff } from "@/types";
 
 export default function ReviewTab({
   date,

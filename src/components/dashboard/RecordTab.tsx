@@ -16,7 +16,7 @@ import {
   X,
 } from "lucide-react";
 import type { ICustomField } from "@/models/Handoff";
-import type { StoredHandoff } from "@/lib/client-storage";
+import type { StoredHandoff } from "@/types";
 import Section from "./Section";
 
 const MEAL_OPTIONS = ["많음", "보통", "적음"] as const;

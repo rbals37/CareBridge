@@ -4,22 +4,39 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heart, LogIn, UserPlus, KeyRound } from "lucide-react";
-import { setLoggedIn } from "@/lib/client-storage";
+import { apiFetch } from "@/lib/api-client";
 
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoggedIn(true);
+    setError("");
+    setLoading(true);
+
+    const { error: err } = await apiFetch("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
+
+    setLoading(false);
+
+    if (err) {
+      setError(err);
+      return;
+    }
+
     router.push("/");
+    router.refresh();
   };
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-gradient-to-br from-teal-50 via-white to-blue-50 px-5 pb-8 pt-[max(2rem,env(safe-area-inset-top))]">
-      <div className="mx-auto w-full max-w-sm flex-1 flex flex-col justify-center">
+      <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center">
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-600 shadow-lg">
             <Heart className="h-9 w-9 fill-white text-white" />
@@ -32,6 +49,11 @@ export default function LoginScreen() {
 
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
           <form onSubmit={handleLogin} className="space-y-4">
+            {error && (
+              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-bold text-red-700">
+                {error}
+              </p>
+            )}
             <div>
               <label className="mb-1.5 block text-sm font-black text-gray-800">
                 이메일
@@ -60,21 +82,22 @@ export default function LoginScreen() {
             </div>
             <button
               type="submit"
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-teal-600 py-3.5 text-sm font-black text-white shadow-md active:bg-teal-700"
+              disabled={loading}
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-teal-600 py-3.5 text-sm font-black text-white shadow-md active:bg-teal-700 disabled:opacity-60"
             >
               <LogIn className="h-5 w-5" />
-              로그인
+              {loading ? "로그인 중…" : "로그인"}
             </button>
           </form>
         </div>
 
         <div className="mt-4 space-y-3">
           <Link
-            href="/register"
+            href="/signup"
             className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-teal-600 bg-white py-3.5 text-sm font-black text-teal-700 active:bg-teal-50"
           >
             <UserPlus className="h-5 w-5" />
-            환자 등록 시작하기
+            회원가입
           </Link>
           <button
             type="button"

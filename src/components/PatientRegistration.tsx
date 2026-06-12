@@ -4,12 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, UserPlus, CheckCircle2 } from "lucide-react";
-import { savePatient, setLoggedIn } from "@/lib/client-storage";
-import type { PatientInfo } from "@/components/MainDashboard";
+import { apiFetch } from "@/lib/api-client";
 
 export default function PatientRegistration() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     age: "",
@@ -25,44 +25,37 @@ export default function PatientRegistration() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     setLoading(true);
 
-    const patient: PatientInfo = {
-      name: formData.name,
-      age: Number(formData.age),
-      gender: formData.gender as "male" | "female",
-      ward: formData.ward || undefined,
-      room: formData.room,
-      bed: formData.bed,
-    };
+    const { error: err } = await apiFetch("/api/patients", {
+      method: "POST",
+      body: JSON.stringify({
+        name: formData.name,
+        age: Number(formData.age),
+        gender: formData.gender,
+        ward: formData.ward || undefined,
+        room: formData.room,
+        bed: formData.bed,
+      }),
+    });
 
-    try {
-      const res = await fetch("/api/patients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(patient),
-      });
-      if (!res.ok && res.status !== 503) {
-        const err = await res.json();
-        alert(err.error ?? "등록에 실패했습니다.");
-        setLoading(false);
-        return;
-      }
-    } catch {
-      /* 오프라인 등록 허용 */
+    setLoading(false);
+
+    if (err) {
+      setError(err);
+      return;
     }
 
-    savePatient(patient);
-    setLoggedIn(true);
     router.push("/");
-    setLoading(false);
+    router.refresh();
   };
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-gray-50">
       <header className="flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <Link
-          href="/login"
+          href="/"
           className="flex h-9 w-9 items-center justify-center rounded-lg active:bg-gray-100"
         >
           <ArrowLeft className="h-5 w-5 text-gray-700" />
@@ -81,10 +74,16 @@ export default function PatientRegistration() {
           <div>
             <p className="text-sm font-black text-teal-900">환자 정보를 등록해주세요</p>
             <p className="mt-1 text-xs font-bold leading-relaxed text-teal-800">
-              등록 후 다른 간병인·가족과 인수인계 정보를 공유할 수 있습니다.
+              MongoDB에 저장되며 다른 간병인과 공유할 수 있습니다.
             </p>
           </div>
         </div>
+
+        {error && (
+          <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm font-bold text-red-700">
+            {error}
+          </p>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="rounded-2xl border border-gray-200 bg-white p-4">
