@@ -61,6 +61,10 @@ export async function POST(request: NextRequest) {
     );
 
     setAuthCookie(response, token);
+
+    console.log("[Signup API] User registered and token created:", user.email, token);
+    console.log("[Signup API] Set-Cookie header:", response.headers.get("Set-Cookie"));
+
     return response;
   } catch (error) {
     return handleApiError(error);
