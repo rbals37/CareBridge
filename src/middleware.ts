@@ -18,12 +18,16 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get(TOKEN_COOKIE)?.value;
   const isPublic = PUBLIC_PAGES.includes(pathname);
 
+  console.log(`[Middleware] Pathname: ${pathname}, Token present: ${!!token}`);
+
   if (isPublic) {
     if (token) {
       try {
-        await verifyToken(token);
+        const payload = await verifyToken(token);
+        console.log(`[Middleware] Public page, valid token. Redirecting to / for user: ${payload.email}`);
         return NextResponse.redirect(new URL("/", request.url));
-      } catch {
+      } catch (e) {
+        console.log("[Middleware] Public page, invalid token. Error:", e);
         /* invalid token — show login/signup */
       }
     }
@@ -31,13 +35,16 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!token) {
+    console.log(`[Middleware] Protected page, no token. Redirecting to /login from ${pathname}`);
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
   try {
-    await verifyToken(token);
+    const payload = await verifyToken(token);
+    console.log(`[Middleware] Protected page, valid token for user: ${payload.email}`);
     return NextResponse.next();
-  } catch {
+  } catch (e) {
+    console.log("[Middleware] Protected page, invalid token. Redirecting to /login. Error:", e);
     const response = NextResponse.redirect(new URL("/login", request.url));
     response.cookies.delete(TOKEN_COOKIE);
     return response;
