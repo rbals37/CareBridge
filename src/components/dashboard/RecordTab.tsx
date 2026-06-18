@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import {
-  Mic,
   CheckCircle2,
   RefreshCcw,
   Angry,
@@ -18,6 +17,7 @@ import {
 import type { ICustomField } from "@/models/Handoff";
 import type { StoredHandoff } from "@/types";
 import Section from "./Section";
+import VoiceRecorder from "./VoiceRecorder";
 
 const MEAL_OPTIONS = ["많음", "보통", "적음"] as const;
 const MOBILITY_OPTIONS = ["혼자 이동 가능", "부축 시 이동 가능", "거동 불가"];
@@ -286,15 +286,12 @@ export default function RecordTab({
         />
       </Section>
 
-      <button
-        type="button"
-        className="flex w-full flex-col items-center gap-2 rounded-xl border-2 border-dashed border-teal-400 bg-white py-5 active:bg-teal-50"
-      >
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-teal-100">
-          <Mic className="h-7 w-7 text-teal-600" />
-        </div>
-        <span className="text-sm font-black text-gray-800">음성으로 돌봄 노하우 남기기</span>
-      </button>
+      <Section title="음성 인계 (선택)">
+        <VoiceRecorder
+          value={handoff.voiceMemoUrl}
+          onChange={(url) => onChange({ voiceMemoUrl: url })}
+        />
+      </Section>
     </div>
   );
 }

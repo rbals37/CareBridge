@@ -35,7 +35,10 @@ export default function HomeScreen() {
   useEffect(() => {
     async function load() {
       setError("");
-      const me = await apiFetch<MeResponse>("/api/auth/me");
+      const [me, list] = await Promise.all([
+        apiFetch<MeResponse>("/api/auth/me"),
+        apiFetch<PatientsResponse>("/api/patients"),
+      ]);
 
       if (me.status === 401 || me.error) {
         router.replace("/login");
@@ -49,7 +52,6 @@ export default function HomeScreen() {
 
       setUser(me.data.user);
 
-      const list = await apiFetch<PatientsResponse>("/api/patients");
       if (list.error) {
         setError(list.error);
       } else {

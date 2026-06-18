@@ -35,12 +35,13 @@ export async function connectDB(): Promise<typeof mongoose> {
   }
 
   if (!cached.promise) {
+    const isServerless = process.env.VERCEL === "1";
     cached.promise = mongoose.connect(getMongoUri(), {
       bufferCommands: false,
-      maxPoolSize: 10,
+      maxPoolSize: isServerless ? 1 : 10,
       minPoolSize: 0,
-      serverSelectionTimeoutMS: 10000,
-      socketTimeoutMS: 45000,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 30000,
     });
   }
 

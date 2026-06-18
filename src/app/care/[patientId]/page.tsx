@@ -25,23 +25,22 @@ export default function CarePage() {
 
   useEffect(() => {
     async function load() {
-      const me = await apiFetch<MeResponse>("/api/auth/me");
+      const [me, res] = await Promise.all([
+        apiFetch<MeResponse>("/api/auth/me"),
+        apiFetch<PatientResponse>(`/api/patients/${patientId}`),
+      ]);
+
       if (me.status === 401 || !me.data?.user) {
         router.replace("/login");
         return;
       }
 
-      const res = await apiFetch<PatientResponse>(`/api/patients/${patientId}`);
-      if (res.status === 404) {
-        router.replace("/");
-        return;
-      }
-      if (res.error || !res.data?.patient) {
+      if (res.status === 404 || res.error || !res.data?.patient) {
         router.replace("/");
         return;
       }
 
-      await apiFetch(`/api/patients/${patientId}/select`, { method: "POST" });
+      apiFetch(`/api/patients/${patientId}/select`, { method: "POST" });
 
       setUser(me.data.user);
       setPatient(res.data.patient);

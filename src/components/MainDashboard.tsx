@@ -12,10 +12,11 @@ import type { ICustomField } from "@/models/Handoff";
 import type { PatientInfo, StoredHandoff, UserInfo } from "@/types";
 
 const EMPTY_HANDOFF: StoredHandoff = {
-  mealAmount: "보통",
+  saved: false,
+  mealAmount: null,
   excretionSleep: { urine: true, feces: true, sleep: true },
-  mobility: "부축 시 이동 가능",
-  emotion: "보통",
+  mobility: null,
+  emotion: null,
   medications: { morning: false, lunch: false, dinner: false, bedtime: false },
   memo: "",
   customFields: [],
@@ -45,6 +46,8 @@ export default function MainDashboard({ patient, user }: MainDashboardProps) {
   };
 
   const parseHandoff = (data: Record<string, unknown>): StoredHandoff => ({
+    id: data._id ? String(data._id) : undefined,
+    saved: true,
     mealAmount: data.mealAmount as string | null,
     excretionSleep: data.excretionSleep as StoredHandoff["excretionSleep"],
     mobility: data.mobility as string | null,

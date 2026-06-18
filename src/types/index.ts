@@ -15,6 +15,8 @@ export interface PatientInfo {
 }
 
 export interface StoredHandoff {
+  id?: string;
+  saved?: boolean;
   mealAmount?: string | null;
   excretionSleep?: { urine: boolean; feces: boolean; sleep: boolean };
   mobility?: string | null;
