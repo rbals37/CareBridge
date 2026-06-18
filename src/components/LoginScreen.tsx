@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heart, LogIn, UserPlus, KeyRound } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
+import ErrorAlert from "@/components/ui/ErrorAlert";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -18,7 +19,7 @@ export default function LoginScreen() {
     setError("");
     setLoading(true);
 
-    const { error: err } = await apiFetch("/api/auth/login", {
+    const { error: err, code, status } = await apiFetch("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
@@ -26,7 +27,13 @@ export default function LoginScreen() {
     setLoading(false);
 
     if (err) {
-      setError(err);
+      if (code === "DB_CONNECTION_ERROR" || status === 503) {
+        setError("서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.");
+      } else if (status === 401) {
+        setError("이메일 또는 비밀번호가 올바르지 않습니다.");
+      } else {
+        setError(err);
+      }
       return;
     }
 
@@ -49,11 +56,7 @@ export default function LoginScreen() {
 
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
           <form onSubmit={handleLogin} className="space-y-4">
-            {error && (
-              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-bold text-red-700">
-                {error}
-              </p>
-            )}
+            {error && <ErrorAlert message={error} />}
             <div>
               <label className="mb-1.5 block text-sm font-black text-gray-800">
                 이메일
@@ -63,7 +66,9 @@ export default function LoginScreen() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="example@email.com"
-                className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 font-bold outline-none focus:border-teal-500"
+                className={`w-full rounded-xl border-2 px-4 py-3 font-bold outline-none focus:border-teal-500 ${
+                  error ? "border-red-300 bg-red-50/30" : "border-gray-200"
+                }`}
                 required
               />
             </div>
@@ -76,7 +81,9 @@ export default function LoginScreen() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 font-bold outline-none focus:border-teal-500"
+                className={`w-full rounded-xl border-2 px-4 py-3 font-bold outline-none focus:border-teal-500 ${
+                  error ? "border-red-300 bg-red-50/30" : "border-gray-200"
+                }`}
                 required
               />
             </div>

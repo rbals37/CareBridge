@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-
-export const dynamic = "force-dynamic";
 import connectDB from "@/lib/db";
 import Patient from "@/models/Patient";
 import {
   getAuthUser,
   getActivePatientId,
   toPatientInfo,
-  handleApiError,
 } from "@/lib/auth";
+import { handleApiError } from "@/lib/api-errors";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,18 +29,6 @@ export async function GET(request: NextRequest) {
           doc.ownerId.toString() === user.id ||
           doc.caregiverIds.some((id) => id.toString() === user.id);
         if (hasAccess) patient = toPatientInfo(doc);
-      }
-    }
-
-    if (!patient) {
-      const firstPatient = await Patient.findOne({
-        $or: [{ ownerId: user.id }, { caregiverIds: user.id }],
-      })
-        .sort({ createdAt: -1 })
-        .lean();
-
-      if (firstPatient) {
-        patient = toPatientInfo(firstPatient);
       }
     }
 

@@ -5,8 +5,10 @@ import {
   requireAuth,
   setPatientCookie,
   toPatientInfo,
-  handleApiError,
 } from "@/lib/auth";
+import { handleApiError } from "@/lib/api-errors";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {

@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import connectDB from "@/lib/db";
 import User from "@/models/User";
 import Patient from "@/models/Patient";
@@ -12,9 +12,17 @@ import {
   verifyToken,
   type TokenPayload,
 } from "@/lib/jwt";
+import { AuthError, PatientError } from "@/lib/auth-errors";
+import {
+  setAuthCookie,
+  clearAuthCookie,
+  setPatientCookie,
+} from "@/lib/api-errors";
 
 export { TOKEN_COOKIE, PATIENT_COOKIE, createToken, verifyToken };
 export type { TokenPayload };
+export { AuthError, PatientError };
+export { setAuthCookie, clearAuthCookie, setPatientCookie };
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);
@@ -25,43 +33,6 @@ export async function verifyPassword(
   hash: string,
 ): Promise<boolean> {
   return bcrypt.compare(password, hash);
-}
-
-export function setAuthCookie(response: NextResponse, token: string) {
-  response.cookies.set(TOKEN_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 7,
-    path: "/",
-  });
-}
-
-export function clearAuthCookie(response: NextResponse) {
-  response.cookies.set(TOKEN_COOKIE, "", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 0,
-    path: "/",
-  });
-  response.cookies.set(PATIENT_COOKIE, "", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 0,
-    path: "/",
-  });
-}
-
-export function setPatientCookie(response: NextResponse, patientId: string) {
-  response.cookies.set(PATIENT_COOKIE, patientId, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 30,
-    path: "/",
-  });
 }
 
 export async function getTokenFromRequest(
@@ -109,14 +80,6 @@ export async function requireAuth(request?: NextRequest) {
     throw new AuthError("로그인이 필요합니다.");
   }
   return user;
-}
-
-export class AuthError extends Error {
-  status = 401;
-  constructor(message: string) {
-    super(message);
-    this.name = "AuthError";
-  }
 }
 
 export function toPatientInfo(patient: {
@@ -184,27 +147,4 @@ export async function requirePatientAccess(userId: string, patientId: string) {
   }
 
   return patient;
-}
-
-export class PatientError extends Error {
-  status: number;
-  constructor(message: string, status = 400) {
-    super(message);
-    this.name = "PatientError";
-    this.status = status;
-  }
-}
-
-export function handleApiError(error: unknown) {
-  if (error instanceof AuthError) {
-    return NextResponse.json({ error: error.message }, { status: 401 });
-  }
-  if (error instanceof PatientError) {
-    return NextResponse.json({ error: error.message }, { status: error.status });
-  }
-  console.error("[API Error]", error);
-  return NextResponse.json(
-    { error: "서버 오류가 발생했습니다." },
-    { status: 500 },
-  );
 }

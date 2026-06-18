@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, UserPlus, CheckCircle2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
+import ErrorAlert from "@/components/ui/ErrorAlert";
+import type { PatientInfo } from "@/types";
 
 export default function PatientRegistration() {
   const router = useRouter();
@@ -28,7 +30,7 @@ export default function PatientRegistration() {
     setError("");
     setLoading(true);
 
-    const { error: err } = await apiFetch("/api/patients", {
+    const { data, error: err } = await apiFetch<{ patient: PatientInfo }>("/api/patients", {
       method: "POST",
       body: JSON.stringify({
         name: formData.name,
@@ -47,7 +49,11 @@ export default function PatientRegistration() {
       return;
     }
 
-    router.push("/");
+    if (data?.patient) {
+      router.push(`/care/${data.patient.id}`);
+    } else {
+      router.push("/");
+    }
     router.refresh();
   };
 
@@ -80,9 +86,9 @@ export default function PatientRegistration() {
         </div>
 
         {error && (
-          <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm font-bold text-red-700">
-            {error}
-          </p>
+          <div className="mb-4">
+            <ErrorAlert message={error} />
+          </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">

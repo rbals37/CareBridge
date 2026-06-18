@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import User from "@/models/User";
-import {
-  createToken,
-  hashPassword,
-  setAuthCookie,
-  handleApiError,
-} from "@/lib/auth";
+import { createToken, hashPassword } from "@/lib/auth";
+import { setAuthCookie, handleApiError } from "@/lib/api-errors";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
@@ -61,10 +59,6 @@ export async function POST(request: NextRequest) {
     );
 
     setAuthCookie(response, token);
-
-    console.log("[Signup API] User registered and token created:", user.email, token);
-    console.log("[Signup API] Set-Cookie header:", response.headers.get("Set-Cookie"));
-
     return response;
   } catch (error) {
     return handleApiError(error);

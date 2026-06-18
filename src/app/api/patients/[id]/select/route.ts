@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   requireAuth,
   requirePatientAccess,
-  setPatientCookie,
   toPatientInfo,
-  handleApiError,
 } from "@/lib/auth";
+import { setPatientCookie, handleApiError } from "@/lib/api-errors";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(
   request: NextRequest,

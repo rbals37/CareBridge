@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { startOfDay, endOfDay } from "date-fns";
 import connectDB from "@/lib/db";
 import Handoff from "@/models/Handoff";
-import {
-  requireAuth,
-  requirePatientAccess,
-  handleApiError,
-} from "@/lib/auth";
+import { requireAuth, requirePatientAccess } from "@/lib/auth";
+import { handleApiError } from "@/lib/api-errors";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {

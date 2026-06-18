@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heart, UserPlus, ArrowLeft } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
+import ErrorAlert from "@/components/ui/ErrorAlert";
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function SignupScreen() {
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+    if (error) setError("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,7 +39,7 @@ export default function SignupScreen() {
 
     setLoading(true);
 
-    const { error: err } = await apiFetch("/api/auth/signup", {
+    const { error: err, code, status } = await apiFetch("/api/auth/signup", {
       method: "POST",
       body: JSON.stringify({
         name: form.name,
@@ -49,11 +51,17 @@ export default function SignupScreen() {
     setLoading(false);
 
     if (err) {
-      setError(err);
+      if (code === "DB_CONNECTION_ERROR" || status === 503) {
+        setError("서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.");
+      } else if (status === 409) {
+        setError("이미 사용 중인 이메일입니다.");
+      } else {
+        setError(err);
+      }
       return;
     }
 
-    router.push("/register");
+    router.push("/");
     router.refresh();
   };
 
@@ -80,11 +88,7 @@ export default function SignupScreen() {
 
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-bold text-red-700">
-                {error}
-              </p>
-            )}
+            {error && <ErrorAlert message={error} />}
             <div>
               <label className="mb-1.5 block text-sm font-black text-gray-800">
                 이름

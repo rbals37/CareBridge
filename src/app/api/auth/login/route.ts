@@ -4,9 +4,10 @@ import User from "@/models/User";
 import {
   createToken,
   verifyPassword,
-  setAuthCookie,
-  handleApiError,
 } from "@/lib/auth";
+import { setAuthCookie, handleApiError } from "@/lib/api-errors";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,10 +52,6 @@ export async function POST(request: NextRequest) {
     });
 
     setAuthCookie(response, token);
-
-    console.log("[Login API] User logged in and token created:", user.email, token);
-    console.log("[Login API] Set-Cookie header:", response.headers.get("Set-Cookie"));
-
     return response;
   } catch (error) {
     return handleApiError(error);

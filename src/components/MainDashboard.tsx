@@ -200,7 +200,9 @@ export default function MainDashboard({ patient, user }: MainDashboardProps) {
     >
       <header className="shrink-0 border-b border-gray-100 bg-white px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="mb-3 flex items-center justify-between">
-          <h1 className="text-xl font-black text-teal-600">간병잇다</h1>
+          <Link href="/" className="text-xl font-black text-teal-600 active:opacity-70">
+            간병잇다
+          </Link>
           <div className="flex items-center gap-1.5">
             <Link
               href="/invite"
