@@ -8,6 +8,20 @@ import {
 } from "@/lib/auth";
 import { handleApiError } from "@/lib/api-errors";
 import { normalizeBedInput, normalizeRoomInput } from "@/lib/patient-utils";
+import {
+  photoValidationMessage,
+  validatePatientPhoto,
+} from "@/lib/patient-photo";
+import { PatientError } from "@/lib/auth-errors";
+
+function resolvePhotoUrl(body: { photoUrl?: unknown }): string | null | undefined {
+  try {
+    return validatePatientPhoto(body.photoUrl);
+  } catch (err) {
+    const code = err instanceof Error ? err.message : "INVALID_PHOTO";
+    throw new PatientError(photoValidationMessage(code), 400);
+  }
+}
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +51,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { name, age, gender, ward, room, bed } = body;
+    const photoUrl = resolvePhotoUrl(body);
 
     if (!name || !age || !gender || !room || !bed) {
       return NextResponse.json(
@@ -77,6 +92,7 @@ export async function POST(request: NextRequest) {
       ward: ward?.trim() || undefined,
       room: normalizedRoom,
       bed: normalizedBed,
+      ...(photoUrl ? { photoUrl } : {}),
     });
 
     const response = NextResponse.json(

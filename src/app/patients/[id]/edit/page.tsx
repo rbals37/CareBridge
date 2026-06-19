@@ -64,6 +64,7 @@ export default function PatientEditPage() {
       mode="edit"
       patientId={patientId}
       initialData={patientToFormData(patient)}
+      initialPhotoUrl={patient.photoUrl}
       backHref="/settings"
       title="환자 정보 수정"
       subtitle={patient.name}

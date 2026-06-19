@@ -15,6 +15,7 @@ import {
 import { apiFetch } from "@/lib/api-client";
 import LoadingScreen from "@/components/ui/LoadingScreen";
 import ErrorAlert from "@/components/ui/ErrorAlert";
+import PatientAvatar from "@/components/PatientAvatar";
 import AppPage, { AppPageHeader, AppPageMain } from "@/components/layout/AppPage";
 import { formatBedLabel, formatRoomLabel } from "@/lib/patient-utils";
 import type { PatientInfo, UserInfo } from "@/types";
@@ -199,9 +200,12 @@ export default function HomeScreen() {
                   onClick={() => handleSelectPatient(patient.id)}
                   className="group flex w-full items-center gap-4 rounded-2xl border border-gray-200 bg-white p-4 text-left shadow-sm transition-all hover:border-teal-300 hover:shadow-md active:scale-[0.99] disabled:opacity-60 md:p-5"
                 >
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-teal-100 bg-teal-50 text-lg font-black text-teal-700 transition-colors group-hover:border-teal-200 group-hover:bg-teal-100 md:h-14 md:w-14">
-                    {patient.name.charAt(0)}
-                  </div>
+                  <PatientAvatar
+                    name={patient.name}
+                    photoUrl={patient.photoUrl}
+                    size="md"
+                    className="transition-colors group-hover:border-teal-200 group-hover:bg-teal-100"
+                  />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                       <p className="truncate text-base font-black text-gray-900 md:text-lg">

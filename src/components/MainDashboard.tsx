@@ -6,6 +6,7 @@ import { format, subDays, isSameDay, startOfDay } from "date-fns";
 import { ko } from "date-fns/locale";
 import { UserPlus, Settings } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
+import PatientAvatar from "@/components/PatientAvatar";
 import RecordTab from "@/components/dashboard/RecordTab";
 import ReviewTab from "@/components/dashboard/ReviewTab";
 import type { ICustomField } from "@/models/Handoff";
@@ -224,9 +225,12 @@ export default function MainDashboard({ patient, user }: MainDashboardProps) {
         </div>
 
         <div className="flex items-center gap-3 rounded-xl border border-teal-100 bg-gradient-to-r from-teal-50 to-blue-50 p-3 md:p-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-teal-100 bg-white text-lg font-black text-teal-700 md:h-12 md:w-12">
-            {patient.name.charAt(0)}
-          </div>
+          <PatientAvatar
+            name={patient.name}
+            photoUrl={patient.photoUrl}
+            size="xl"
+            className="border-white bg-white"
+          />
           <div className="min-w-0 flex-1">
             <p className="truncate text-base font-black text-gray-900 md:text-lg">
               {patient.name} 환자

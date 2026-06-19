@@ -14,6 +14,7 @@ export interface PatientInfo {
   bed: string;
   isOwner?: boolean;
   inviteCode?: string;
+  photoUrl?: string;
 }
 
 export interface StoredHandoff {

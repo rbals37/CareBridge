@@ -11,6 +11,20 @@ import {
 } from "@/lib/auth";
 import { handleApiError, clearPatientCookie } from "@/lib/api-errors";
 import { normalizeBedInput, normalizeRoomInput } from "@/lib/patient-utils";
+import {
+  photoValidationMessage,
+  validatePatientPhoto,
+} from "@/lib/patient-photo";
+import { PatientError } from "@/lib/auth-errors";
+
+function resolvePhotoUrl(body: { photoUrl?: unknown }): string | null | undefined {
+  try {
+    return validatePatientPhoto(body.photoUrl);
+  } catch (err) {
+    const code = err instanceof Error ? err.message : "INVALID_PHOTO";
+    throw new PatientError(photoValidationMessage(code), 400);
+  }
+}
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +51,7 @@ export async function PUT(
 
     const body = await request.json();
     const { name, age, gender, ward, room, bed } = body;
+    const photoUrl = resolvePhotoUrl(body);
 
     if (!name?.trim() || !age || !gender || !room || !bed) {
       return NextResponse.json(
@@ -71,16 +86,24 @@ export async function PUT(
       );
     }
 
+    const update: Record<string, unknown> = {
+      name: name.trim(),
+      age: Number(age),
+      gender,
+      ward: ward?.trim() || undefined,
+      room: normalizedRoom,
+      bed: normalizedBed,
+    };
+
+    if (photoUrl === null) {
+      update.$unset = { photoUrl: 1 };
+    } else if (photoUrl) {
+      update.photoUrl = photoUrl;
+    }
+
     const updated = await Patient.findByIdAndUpdate(
       params.id,
-      {
-        name: name.trim(),
-        age: Number(age),
-        gender,
-        ward: ward?.trim() || undefined,
-        room: normalizedRoom,
-        bed: normalizedBed,
-      },
+      update,
       { new: true, runValidators: true },
     ).lean();
 

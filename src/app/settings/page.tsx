@@ -7,6 +7,7 @@ import { ArrowLeft, LogOut, User, Heart, Pencil, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import LoadingScreen from "@/components/ui/LoadingScreen";
 import ErrorAlert from "@/components/ui/ErrorAlert";
+import PatientAvatar from "@/components/PatientAvatar";
 import AppPage, { AppPageHeader, AppPageMain } from "@/components/layout/AppPage";
 import { formatBedLabel, formatRoomLabel } from "@/lib/patient-utils";
 import type { PatientInfo, UserInfo } from "@/types";
@@ -130,6 +131,7 @@ export default function SettingsPage() {
                     key={p.id}
                     className="flex items-center gap-2 rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 md:py-2.5"
                   >
+                    <PatientAvatar name={p.name} photoUrl={p.photoUrl} size="sm" />
                     <Link
                       href={`/care/${p.id}`}
                       className="min-w-0 flex-1 text-sm font-bold text-gray-800 hover:text-teal-700"

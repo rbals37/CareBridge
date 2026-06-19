@@ -97,6 +97,7 @@ export function toPatientInfo(
     room: string;
     bed: string;
     inviteCode?: string;
+    photoUrl?: string;
   },
   userId?: string,
 ): PatientInfo {
@@ -112,6 +113,7 @@ export function toPatientInfo(
       ? { isOwner: patient.ownerId.toString() === userId }
       : {}),
     ...(patient.inviteCode ? { inviteCode: patient.inviteCode } : {}),
+    ...(patient.photoUrl ? { photoUrl: patient.photoUrl } : {}),
   };
 }
 

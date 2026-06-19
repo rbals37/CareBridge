@@ -11,6 +11,7 @@ import {
   normalizeRoomInput,
 } from "@/lib/patient-utils";
 import type { PatientInfo } from "@/types";
+import PatientPhotoPicker from "@/components/PatientPhotoPicker";
 
 export interface PatientFormData {
   name: string;
@@ -31,6 +32,7 @@ interface PatientFormProps {
   submitLabel: string;
   onSuccess: (patient: PatientInfo) => void;
   headerExtra?: React.ReactNode;
+  initialPhotoUrl?: string;
 }
 
 const EMPTY_FORM: PatientFormData = {
@@ -63,10 +65,13 @@ export default function PatientForm({
   submitLabel,
   onSuccess,
   headerExtra,
+  initialPhotoUrl,
 }: PatientFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState<PatientFormData>(initialData);
+  const [photoUrl, setPhotoUrl] = useState<string | undefined>(initialPhotoUrl);
+  const [photoRemoved, setPhotoRemoved] = useState(false);
 
   const handleChange = (field: keyof PatientFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -85,7 +90,7 @@ export default function PatientForm({
     setError("");
     setLoading(true);
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       name: formData.name,
       age: Number(formData.age),
       gender: formData.gender,
@@ -93,6 +98,12 @@ export default function PatientForm({
       room: normalizeRoomInput(formData.room),
       bed: normalizeBedInput(formData.bed),
     };
+
+    if (photoRemoved) {
+      payload.photoUrl = null;
+    } else if (photoUrl) {
+      payload.photoUrl = photoUrl;
+    }
 
     const url = mode === "create" ? "/api/patients" : `/api/patients/${patientId}`;
     const method = mode === "create" ? "POST" : "PUT";
@@ -154,6 +165,22 @@ export default function PatientForm({
         )}
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 md:col-span-2 md:p-5">
+            <PatientPhotoPicker
+              name={formData.name}
+              value={photoUrl}
+              onChange={(next) => {
+                if (next === undefined) {
+                  setPhotoUrl(undefined);
+                  setPhotoRemoved(mode === "edit" && !!initialPhotoUrl);
+                } else {
+                  setPhotoUrl(next);
+                  setPhotoRemoved(false);
+                }
+              }}
+            />
+          </div>
+
           <div className="rounded-2xl border border-gray-200 bg-white p-4 md:p-5">
             <h2 className="mb-4 flex items-center gap-2 text-sm font-black md:text-base">
               <span className="h-4 w-1 rounded-full bg-teal-500" />

@@ -10,6 +10,7 @@ export interface IPatient extends Document {
   room: string;
   bed: string;
   inviteCode?: string;
+  photoUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -25,6 +26,7 @@ const PatientSchema = new Schema<IPatient>(
     room: { type: String, required: true },
     bed: { type: String, required: true },
     inviteCode: { type: String, unique: true, sparse: true },
+    photoUrl: { type: String },
   },
   { timestamps: true },
 );
