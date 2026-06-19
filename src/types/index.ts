@@ -12,6 +12,8 @@ export interface PatientInfo {
   ward?: string;
   room: string;
   bed: string;
+  isOwner?: boolean;
+  inviteCode?: string;
 }
 
 export interface StoredHandoff {

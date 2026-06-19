@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, LogOut, User, Heart } from "lucide-react";
+import { ArrowLeft, LogOut, User, Heart, Pencil, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import LoadingScreen from "@/components/ui/LoadingScreen";
 import ErrorAlert from "@/components/ui/ErrorAlert";
 import AppPage, { AppPageHeader, AppPageMain } from "@/components/layout/AppPage";
+import { formatBedLabel, formatRoomLabel } from "@/lib/patient-utils";
 import type { PatientInfo, UserInfo } from "@/types";
 
 interface MeResponse {
@@ -24,7 +25,15 @@ export default function SettingsPage() {
   const [user, setUser] = useState<UserInfo | null>(null);
   const [patients, setPatients] = useState<PatientInfo[]>([]);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState("");
+
+  const loadPatients = async () => {
+    const list = await apiFetch<PatientsResponse>("/api/patients");
+    if (list.data?.patients) {
+      setPatients(list.data.patients);
+    }
+  };
 
   useEffect(() => {
     async function load() {
@@ -34,11 +43,7 @@ export default function SettingsPage() {
         return;
       }
       setUser(me.data.user);
-
-      const list = await apiFetch<PatientsResponse>("/api/patients");
-      if (list.data?.patients) {
-        setPatients(list.data.patients);
-      }
+      await loadPatients();
     }
     load();
   }, [router]);
@@ -55,6 +60,30 @@ export default function SettingsPage() {
     }
 
     router.replace("/login");
+    router.refresh();
+  };
+
+  const handleDelete = async (patient: PatientInfo) => {
+    const confirmed = window.confirm(
+      `${patient.name} 환자 정보와 모든 인수인계 기록을 삭제할까요? 이 작업은 되돌릴 수 없습니다.`,
+    );
+    if (!confirmed) return;
+
+    setDeletingId(patient.id);
+    setError("");
+
+    const { error: err } = await apiFetch(`/api/patients/${patient.id}`, {
+      method: "DELETE",
+    });
+
+    setDeletingId(null);
+
+    if (err) {
+      setError(err);
+      return;
+    }
+
+    await loadPatients();
     router.refresh();
   };
 
@@ -97,13 +126,42 @@ export default function SettingsPage() {
             ) : (
               <div className="space-y-2">
                 {patients.map((p) => (
-                  <Link
+                  <div
                     key={p.id}
-                    href={`/care/${p.id}`}
-                    className="block rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-sm font-bold text-gray-800 hover:bg-teal-50 md:py-2.5"
+                    className="flex items-center gap-2 rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 md:py-2.5"
                   >
-                    {p.name} · {p.room}호 {p.bed}번
-                  </Link>
+                    <Link
+                      href={`/care/${p.id}`}
+                      className="min-w-0 flex-1 text-sm font-bold text-gray-800 hover:text-teal-700"
+                    >
+                      {p.name} · {formatRoomLabel(p.room)} {formatBedLabel(p.bed)}
+                      {!p.isOwner && (
+                        <span className="ml-1 text-[10px] font-black text-blue-600 md:text-xs">
+                          (공유)
+                        </span>
+                      )}
+                    </Link>
+                    {p.isOwner && (
+                      <div className="flex shrink-0 items-center gap-1">
+                        <Link
+                          href={`/patients/${p.id}/edit`}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 hover:bg-teal-100 hover:text-teal-700"
+                          aria-label="환자 정보 수정"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Link>
+                        <button
+                          type="button"
+                          disabled={!!deletingId}
+                          onClick={() => handleDelete(p)}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 hover:bg-red-100 hover:text-red-600 disabled:opacity-50"
+                          aria-label="환자 삭제"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             )}

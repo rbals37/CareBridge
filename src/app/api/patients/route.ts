@@ -7,6 +7,7 @@ import {
   toPatientInfo,
 } from "@/lib/auth";
 import { handleApiError } from "@/lib/api-errors";
+import { normalizeBedInput, normalizeRoomInput } from "@/lib/patient-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
       .lean();
 
     return NextResponse.json({
-      patients: patients.map(toPatientInfo),
+      patients: patients.map((p) => toPatientInfo(p, user.id)),
     });
   } catch (error) {
     return handleApiError(error);
@@ -44,10 +45,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const normalizedRoom = normalizeRoomInput(room);
+    const normalizedBed = normalizeBedInput(bed);
+
+    if (!normalizedRoom || !normalizedBed) {
+      return NextResponse.json(
+        { error: "병실과 베드 번호를 입력해 주세요." },
+        { status: 400 },
+      );
+    }
+
     const existing = await Patient.findOne({
       ownerId: user.id,
-      room,
-      bed,
+      room: normalizedRoom,
+      bed: normalizedBed,
     });
 
     if (existing) {
@@ -64,12 +75,12 @@ export async function POST(request: NextRequest) {
       age: Number(age),
       gender,
       ward: ward?.trim() || undefined,
-      room: room.trim(),
-      bed: bed.trim(),
+      room: normalizedRoom,
+      bed: normalizedBed,
     });
 
     const response = NextResponse.json(
-      { patient: toPatientInfo(patient) },
+      { patient: toPatientInfo(patient, user.id) },
       { status: 201 },
     );
 

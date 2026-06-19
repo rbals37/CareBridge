@@ -9,6 +9,7 @@ import AppShell from "@/components/layout/AppShell";
 import RecordTab from "@/components/dashboard/RecordTab";
 import ReviewTab from "@/components/dashboard/ReviewTab";
 import type { ICustomField } from "@/models/Handoff";
+import { formatBedLabel, formatRoomLabel } from "@/lib/patient-utils";
 import type { PatientInfo, StoredHandoff, UserInfo } from "@/types";
 
 const EMPTY_HANDOFF: StoredHandoff = {
@@ -206,7 +207,7 @@ export default function MainDashboard({ patient, user }: MainDashboardProps) {
           </Link>
           <div className="flex items-center gap-1.5 md:gap-2">
             <Link
-              href="/invite"
+              href={`/invite?patientId=${patient.id}`}
               className="flex h-9 w-9 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 md:h-10 md:w-10"
               aria-label="초대"
             >
@@ -231,7 +232,8 @@ export default function MainDashboard({ patient, user }: MainDashboardProps) {
               {patient.name} 환자
             </p>
             <p className="text-xs font-bold text-teal-800 md:text-sm">
-              {patient.age}세 · {genderLabel} · {patient.room}호 {patient.bed}번
+              {patient.age}세 · {genderLabel} · {formatRoomLabel(patient.room)}{" "}
+              {formatBedLabel(patient.bed)}
             </p>
             <p className="text-[10px] font-bold text-gray-500 md:text-xs">
               기록자: {user.name}

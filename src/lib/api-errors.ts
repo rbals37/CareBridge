@@ -29,6 +29,10 @@ export function setPatientCookie(response: NextResponse, patientId: string) {
   });
 }
 
+export function clearPatientCookie(response: NextResponse) {
+  response.cookies.set(PATIENT_COOKIE, "", { ...COOKIE_OPTIONS, maxAge: 0 });
+}
+
 export function handleApiError(error: unknown) {
   if (error instanceof AuthError) {
     return NextResponse.json({ error: error.message }, { status: 401 });

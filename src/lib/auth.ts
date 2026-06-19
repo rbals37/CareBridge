@@ -18,6 +18,10 @@ import {
   clearAuthCookie,
   setPatientCookie,
 } from "@/lib/api-errors";
+import {
+  normalizeBedInput,
+  normalizeRoomInput,
+} from "@/lib/patient-utils";
 
 export { TOKEN_COOKIE, PATIENT_COOKIE, createToken, verifyToken };
 export type { TokenPayload };
@@ -82,24 +86,41 @@ export async function requireAuth(request?: NextRequest) {
   return user;
 }
 
-export function toPatientInfo(patient: {
-  _id: { toString(): string };
-  name: string;
-  age: number;
-  gender: "male" | "female";
-  ward?: string;
-  room: string;
-  bed: string;
-}): PatientInfo {
+export function toPatientInfo(
+  patient: {
+    _id: { toString(): string };
+    ownerId?: { toString(): string };
+    name: string;
+    age: number;
+    gender: "male" | "female";
+    ward?: string;
+    room: string;
+    bed: string;
+    inviteCode?: string;
+  },
+  userId?: string,
+): PatientInfo {
   return {
     id: patient._id.toString(),
     name: patient.name,
     age: patient.age,
     gender: patient.gender,
     ward: patient.ward,
-    room: patient.room,
-    bed: patient.bed,
+    room: normalizeRoomInput(patient.room),
+    bed: normalizeBedInput(patient.bed),
+    ...(userId && patient.ownerId
+      ? { isOwner: patient.ownerId.toString() === userId }
+      : {}),
+    ...(patient.inviteCode ? { inviteCode: patient.inviteCode } : {}),
   };
+}
+
+export async function requirePatientOwner(userId: string, patientId: string) {
+  const patient = await requirePatientAccess(userId, patientId);
+  if (patient.ownerId.toString() !== userId) {
+    throw new PatientError("환자 정보를 수정할 권한이 없습니다.", 403);
+  }
+  return patient;
 }
 
 export async function getActivePatientId(

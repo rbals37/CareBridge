@@ -14,6 +14,7 @@ import { apiFetch } from "@/lib/api-client";
 import LoadingScreen from "@/components/ui/LoadingScreen";
 import ErrorAlert from "@/components/ui/ErrorAlert";
 import AppPage, { AppPageHeader, AppPageMain } from "@/components/layout/AppPage";
+import { formatBedLabel, formatRoomLabel } from "@/lib/patient-utils";
 import type { PatientInfo, UserInfo } from "@/types";
 
 interface MeResponse {
@@ -163,7 +164,8 @@ export default function HomeScreen() {
                       {patient.name} 환자
                     </p>
                     <p className="text-xs font-bold text-gray-500 md:text-sm">
-                      {patient.age}세 · {gender} · {patient.room}호 {patient.bed}번
+                      {patient.age}세 · {gender} · {formatRoomLabel(patient.room)}{" "}
+                      {formatBedLabel(patient.bed)}
                     </p>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">
