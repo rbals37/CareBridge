@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heart, LogIn, UserPlus, KeyRound } from "lucide-react";
-import { apiFetch } from "@/lib/api-client";
+import AppPage from "@/components/layout/AppPage";
 import ErrorAlert from "@/components/ui/ErrorAlert";
+import { apiFetch } from "@/lib/api-client";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -42,8 +43,9 @@ export default function LoginScreen() {
   };
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-gradient-to-br from-teal-50 via-white to-blue-50 px-5 pb-8 pt-[max(2rem,env(safe-area-inset-top))]">
-      <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center">
+    <AppPage variant="auth">
+      <div className="flex min-h-[100dvh] flex-col bg-gradient-to-br from-teal-50 via-white to-blue-50 px-5 pb-8 pt-[max(2rem,env(safe-area-inset-top))] md:min-h-0 md:rounded-2xl md:px-8 md:py-10">
+      <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center md:max-w-none">
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-600 shadow-lg">
             <Heart className="h-9 w-9 fill-white text-white" />
@@ -115,6 +117,7 @@ export default function LoginScreen() {
           </button>
         </div>
       </div>
-    </div>
+      </div>
+    </AppPage>
   );
 }

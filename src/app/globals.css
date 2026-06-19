@@ -37,6 +37,12 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  @media (min-width: 768px) {
+    html {
+      font-size: 16px;
+    }
+  }
+
   body {
     @apply bg-mint-50 text-gray-900 antialiased;
     font-family:
@@ -53,6 +59,15 @@
   select,
   button {
     font-size: 16px;
+  }
+
+  @media (min-width: 768px) {
+    input,
+    textarea,
+    select,
+    button {
+      font-size: inherit;
+    }
   }
 }
 
@@ -72,5 +87,9 @@
 
   .safe-bottom {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .app-hover {
+    @apply transition-colors hover:bg-gray-50;
   }
 }

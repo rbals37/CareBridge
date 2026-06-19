@@ -72,11 +72,11 @@ export default function RecordTab({
   const [newValue, setNewValue] = useState("");
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-8 lg:gap-y-6 lg:space-y-0">
       <button
         type="button"
         onClick={onCopyFromYesterday}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5 text-sm font-black text-white shadow-md active:bg-blue-700"
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5 text-sm font-black text-white shadow-md hover:bg-blue-700 active:bg-blue-700 lg:col-span-2"
       >
         <RefreshCcw className="h-4 w-4" />
         전날과 동일하게 기록
@@ -277,16 +277,16 @@ export default function RecordTab({
         </div>
       </Section>
 
-      <Section title="특이사항 메모">
+      <Section title="특이사항 메모" className="lg:col-span-2">
         <textarea
           value={handoff.memo ?? ""}
           onChange={(e) => onChange({ memo: e.target.value })}
           placeholder="다음 근무자에게 전달할 내용"
-          className="h-28 w-full resize-none rounded-xl border-2 border-gray-200 p-3 text-sm font-bold outline-none focus:border-teal-500"
+          className="h-28 w-full resize-none rounded-xl border-2 border-gray-200 p-3 text-sm font-bold outline-none focus:border-teal-500 md:h-36"
         />
       </Section>
 
-      <Section title="음성 인계 (선택)">
+      <Section title="음성 인계 (선택)" className="lg:col-span-2">
         <VoiceRecorder
           value={handoff.voiceMemoUrl}
           onChange={(url) => onChange({ voiceMemoUrl: url })}

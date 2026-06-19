@@ -120,7 +120,7 @@ export default function ReviewTab({
           <Activity className="h-5 w-5 text-teal-600" />
           {format(date, "M월 d일")} 돌봄 요약
         </h3>
-        <div className="mb-3 grid grid-cols-3 gap-2">
+        <div className="mb-3 grid grid-cols-3 gap-2 md:gap-3 lg:grid-cols-5">
           <div className="flex flex-col items-center rounded-xl border border-orange-100 bg-orange-50 p-2">
             <div className="mb-1.5 flex h-9 w-9 items-center justify-center rounded-full bg-orange-200 text-orange-700">
               <Utensils className="h-4 w-4" />
@@ -143,7 +143,7 @@ export default function ReviewTab({
             <span className="text-xs font-black">{mobility.slice(0, 5)}</span>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 md:gap-3 lg:grid-cols-2">
           <div className="flex flex-col items-center rounded-xl border border-teal-100 bg-teal-50 p-2">
             <Smile className="mb-1 h-5 w-5 text-teal-600" />
             <span className="text-[10px] font-black text-gray-500">감정</span>

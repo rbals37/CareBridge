@@ -5,7 +5,7 @@ import Link from "next/link";
 import { format, subDays, isSameDay, startOfDay } from "date-fns";
 import { ko } from "date-fns/locale";
 import { UserPlus, Settings } from "lucide-react";
-import MobileShell, { MobileFooter } from "@/components/layout/MobileShell";
+import AppShell from "@/components/layout/AppShell";
 import RecordTab from "@/components/dashboard/RecordTab";
 import ReviewTab from "@/components/dashboard/ReviewTab";
 import type { ICustomField } from "@/models/Handoff";
@@ -173,76 +173,74 @@ export default function MainDashboard({ patient, user }: MainDashboardProps) {
     showToast("전날 기록이 없습니다");
   };
 
-  return (
-    <MobileShell
-      footer={
-        activeTab === "record" ? (
-          <MobileFooter>
-            <button
-              type="button"
-              disabled={saving}
-              onClick={() => handleSave("handed_off")}
-              className="w-full rounded-xl bg-teal-600 py-3.5 text-sm font-black text-white shadow-md active:bg-teal-700 disabled:opacity-60"
-            >
-              {saving ? "저장 중…" : "작성 완료 및 바톤 넘기기"}
-            </button>
-          </MobileFooter>
-        ) : isSameDay(selectedDate, today) ? (
-          <MobileFooter>
-            <button
-              type="button"
-              disabled={saving}
-              onClick={() => handleSave("accepted")}
-              className="w-full rounded-xl bg-teal-600 py-3.5 text-sm font-black leading-snug text-white shadow-md active:bg-teal-700 disabled:opacity-60"
-            >
-              모든 주의사항 확인 · 간병 인계받기
-            </button>
-          </MobileFooter>
-        ) : undefined
-      }
-    >
-      <header className="shrink-0 border-b border-gray-100 bg-white px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+  const footer =
+    activeTab === "record" ? (
+      <button
+        type="button"
+        disabled={saving}
+        onClick={() => handleSave("handed_off")}
+        className="w-full rounded-xl bg-teal-600 py-3.5 text-sm font-black text-white shadow-md hover:bg-teal-700 active:bg-teal-700 disabled:opacity-60 md:py-4 md:text-base"
+      >
+        {saving ? "저장 중…" : "작성 완료 및 바톤 넘기기"}
+      </button>
+    ) : isSameDay(selectedDate, today) ? (
+      <button
+        type="button"
+        disabled={saving}
+        onClick={() => handleSave("accepted")}
+        className="w-full rounded-xl bg-teal-600 py-3.5 text-sm font-black leading-snug text-white shadow-md hover:bg-teal-700 active:bg-teal-700 disabled:opacity-60 md:py-4 md:text-base"
+      >
+        모든 주의사항 확인 · 간병 인계받기
+      </button>
+    ) : undefined;
+
+  const sidebar = (
+    <>
+      <div className="px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:px-5 lg:pt-5">
         <div className="mb-3 flex items-center justify-between">
-          <Link href="/" className="text-xl font-black text-teal-600 active:opacity-70">
+          <Link
+            href="/"
+            className="text-xl font-black text-teal-600 hover:text-teal-700 md:text-2xl"
+          >
             간병잇다
           </Link>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 md:gap-2">
             <Link
               href="/invite"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-600"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 md:h-10 md:w-10"
               aria-label="초대"
             >
-              <UserPlus className="h-4 w-4" />
+              <UserPlus className="h-4 w-4 md:h-5 md:w-5" />
             </Link>
             <Link
               href="/settings"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-600"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100 md:h-10 md:w-10"
               aria-label="설정"
             >
-              <Settings className="h-4 w-4" />
+              <Settings className="h-4 w-4 md:h-5 md:w-5" />
             </Link>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 rounded-xl border border-teal-100 bg-gradient-to-r from-teal-50 to-blue-50 p-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-teal-100 bg-white text-lg font-black text-teal-700">
+        <div className="flex items-center gap-3 rounded-xl border border-teal-100 bg-gradient-to-r from-teal-50 to-blue-50 p-3 md:p-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-teal-100 bg-white text-lg font-black text-teal-700 md:h-12 md:w-12">
             {patient.name.charAt(0)}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-base font-black text-gray-900">
+            <p className="truncate text-base font-black text-gray-900 md:text-lg">
               {patient.name} 환자
             </p>
-            <p className="text-xs font-bold text-teal-800">
+            <p className="text-xs font-bold text-teal-800 md:text-sm">
               {patient.age}세 · {genderLabel} · {patient.room}호 {patient.bed}번
             </p>
-            <p className="text-[10px] font-bold text-gray-500">
+            <p className="text-[10px] font-bold text-gray-500 md:text-xs">
               기록자: {user.name}
             </p>
           </div>
         </div>
-      </header>
+      </div>
 
-      <div className="flex shrink-0 border-b border-gray-100 bg-white">
+      <div className="flex shrink-0 border-b border-gray-100 bg-white lg:flex-col">
         {(
           [
             { id: "record", main: "내용 기록", sub: "인계" },
@@ -253,23 +251,24 @@ export default function MainDashboard({ patient, user }: MainDashboardProps) {
             key={id}
             type="button"
             onClick={() => setActiveTab(id)}
-            className={`flex-1 border-b-[3px] py-2.5 text-center ${
+            className={`flex-1 border-b-[3px] py-2.5 text-center transition-colors lg:flex-none lg:px-5 lg:text-left ${
               activeTab === id
-                ? "border-teal-600 text-teal-700"
-                : "border-transparent text-gray-400"
+                ? "border-teal-600 text-teal-700 bg-teal-50/50 lg:bg-teal-50"
+                : "border-transparent text-gray-400 hover:text-gray-600 lg:hover:bg-gray-50"
             }`}
           >
-            <span className="block text-sm font-black">{main}</span>
-            <span className="block text-[10px] font-bold">({sub})</span>
+            <span className="block text-sm font-black md:text-base">{main}</span>
+            <span className="block text-[10px] font-bold md:text-xs">({sub})</span>
           </button>
         ))}
       </div>
 
       <div
         ref={calendarRef}
-        className="shrink-0 overflow-x-auto border-b border-gray-100 bg-gray-50/80 px-3 py-2.5 no-scrollbar"
+        className="shrink-0 overflow-x-auto border-b border-gray-100 bg-gray-50/80 px-3 py-2.5 no-scrollbar lg:overflow-visible lg:border-b-0 lg:px-4 lg:py-4 lg:flex-1"
       >
-        <div className="flex min-w-max gap-2">
+        <p className="mb-2 hidden text-xs font-black text-gray-500 lg:block">날짜 선택</p>
+        <div className="flex min-w-max gap-2 lg:grid lg:min-w-0 lg:grid-cols-7 lg:gap-1.5">
           {dates.map((date) => {
             const selected = isSameDay(date, selectedDate);
             return (
@@ -277,10 +276,10 @@ export default function MainDashboard({ patient, user }: MainDashboardProps) {
                 key={date.toISOString()}
                 type="button"
                 onClick={() => setSelectedDate(date)}
-                className={`flex h-14 w-11 flex-col items-center justify-center rounded-xl border-2 transition-all active:scale-95 ${
+                className={`flex h-14 w-11 flex-col items-center justify-center rounded-xl border-2 transition-all active:scale-95 lg:h-12 lg:w-full ${
                   selected
                     ? "border-teal-600 bg-teal-600 text-white shadow-md"
-                    : "border-gray-200 bg-white text-gray-500"
+                    : "border-gray-200 bg-white text-gray-500 hover:border-teal-200 hover:bg-teal-50/50"
                 }`}
               >
                 <span
@@ -288,14 +287,18 @@ export default function MainDashboard({ patient, user }: MainDashboardProps) {
                 >
                   {format(date, "E", { locale: ko })}
                 </span>
-                <span className="text-base font-black">{format(date, "d")}</span>
+                <span className="text-base font-black lg:text-sm">{format(date, "d")}</span>
               </button>
             );
           })}
         </div>
       </div>
+    </>
+  );
 
-      <main className="min-h-0 flex-1 overflow-y-auto bg-gray-50 px-4 py-4">
+  return (
+    <AppShell sidebar={sidebar} footer={footer}>
+      <main className="bg-gray-50 px-4 py-4 md:px-6 md:py-6 lg:px-8">
         {activeTab === "record" ? (
           <RecordTab
             handoff={handoff}
@@ -320,10 +323,10 @@ export default function MainDashboard({ patient, user }: MainDashboardProps) {
       </main>
 
       {toast && (
-        <div className="pointer-events-none fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full bg-gray-900/90 px-4 py-2 text-xs font-bold text-white shadow-lg">
+        <div className="pointer-events-none fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full bg-gray-900/90 px-4 py-2 text-xs font-bold text-white shadow-lg md:text-sm">
           {toast}
         </div>
       )}
-    </MobileShell>
+    </AppShell>
   );
 }
