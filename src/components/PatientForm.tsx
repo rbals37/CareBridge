@@ -30,6 +30,7 @@ interface PatientFormProps {
   subtitle: string;
   submitLabel: string;
   onSuccess: (patient: PatientInfo) => void;
+  headerExtra?: React.ReactNode;
 }
 
 const EMPTY_FORM: PatientFormData = {
@@ -61,6 +62,7 @@ export default function PatientForm({
   subtitle,
   submitLabel,
   onSuccess,
+  headerExtra,
 }: PatientFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -127,6 +129,7 @@ export default function PatientForm({
             <p className="text-xs font-bold text-gray-500 md:text-sm">{subtitle}</p>
           </div>
         </div>
+        {headerExtra}
       </AppPageHeader>
 
       <AppPageMain className="pb-28 md:pb-8">

@@ -14,6 +14,7 @@ import {
 import { apiFetch } from "@/lib/api-client";
 import LoadingScreen from "@/components/ui/LoadingScreen";
 import ErrorAlert from "@/components/ui/ErrorAlert";
+import InviteJoinForm from "@/components/InviteJoinForm";
 import AppPage, { AppPageHeader, AppPageMain } from "@/components/layout/AppPage";
 import { formatBedLabel, formatRoomLabel } from "@/lib/patient-utils";
 import type { PatientInfo } from "@/types";
@@ -27,11 +28,6 @@ interface InviteResponse {
   patient: PatientInfo;
 }
 
-interface JoinResponse {
-  patient: PatientInfo;
-  alreadyJoined?: boolean;
-}
-
 function InvitePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -40,10 +36,8 @@ function InvitePageContent() {
   const [ownedPatients, setOwnedPatients] = useState<PatientInfo[]>([]);
   const [selectedPatientId, setSelectedPatientId] = useState(preselectedId ?? "");
   const [inviteCode, setInviteCode] = useState<string | null>(null);
-  const [joinCode, setJoinCode] = useState("");
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [joining, setJoining] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState<string | null>(null);
@@ -168,36 +162,12 @@ function InvitePageContent() {
     }
   };
 
-  const handleJoin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const code = joinCode.trim().toUpperCase();
-    if (!code) {
-      setError("초대 코드를 입력해 주세요.");
-      return;
-    }
-
-    setJoining(true);
-    setError("");
-
-    const { data, error: err } = await apiFetch<JoinResponse>("/api/invites/join", {
-      method: "POST",
-      body: JSON.stringify({ code }),
-    });
-
-    setJoining(false);
-
-    if (err) {
-      setError(err);
-      return;
-    }
-
-    if (data?.patient) {
-      showToast(
-        data.alreadyJoined ? "이미 참여 중인 환자입니다" : "환자 간병에 참여했습니다",
-      );
-      router.push(`/care/${data.patient.id}`);
-      router.refresh();
-    }
+  const handleJoinSuccess = (patient: PatientInfo, alreadyJoined?: boolean) => {
+    showToast(
+      alreadyJoined ? "이미 참여 중인 환자입니다" : "환자 간병에 참여했습니다",
+    );
+    router.push(`/care/${patient.id}`);
+    router.refresh();
   };
 
   if (loading) return <LoadingScreen />;
@@ -229,23 +199,11 @@ function InvitePageContent() {
           <p className="mb-4 text-xs font-bold text-gray-500 md:text-sm">
             다른 간병인에게 받은 코드를 입력하면 해당 환자 기록에 참여할 수 있습니다.
           </p>
-          <form onSubmit={handleJoin} className="flex flex-col gap-3 sm:flex-row">
-            <input
-              type="text"
-              value={joinCode}
-              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-              placeholder="초대 코드 6자리"
-              maxLength={6}
-              className="flex-1 rounded-xl border-2 border-gray-200 px-4 py-3 font-black uppercase tracking-widest outline-none focus:border-teal-500"
-            />
-            <button
-              type="submit"
-              disabled={joining}
-              className="rounded-xl bg-teal-600 px-6 py-3 text-sm font-black text-white hover:bg-teal-700 disabled:opacity-60"
-            >
-              {joining ? "참여 중…" : "참여하기"}
-            </button>
-          </form>
+          <InviteJoinForm
+            compact
+            onSuccess={handleJoinSuccess}
+            onError={setError}
+          />
         </div>
 
         {ownedPatients.length > 0 ? (

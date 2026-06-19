@@ -9,6 +9,8 @@ import {
   UserPlus,
   ChevronRight,
   ClipboardList,
+  KeyRound,
+  Share2,
 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import LoadingScreen from "@/components/ui/LoadingScreen";
@@ -33,6 +35,8 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectingId, setSelectingId] = useState<string | null>(null);
+
+  const ownedCount = patients.filter((p) => p.isOwner).length;
 
   useEffect(() => {
     async function load() {
@@ -116,15 +120,45 @@ export default function HomeScreen() {
           </div>
         )}
 
-        <div className="mb-4 flex items-center justify-between md:mb-6">
-          <h2 className="text-base font-black text-gray-900 md:text-lg">담당 환자</h2>
-          <span className="rounded-full bg-teal-100 px-2.5 py-0.5 text-xs font-black text-teal-700 md:text-sm">
-            {patients.length}명
-          </span>
-        </div>
+        {patients.length > 0 && (
+          <div className="mb-5 flex flex-col gap-3 border-b border-gray-100 pb-5 md:mb-6 md:flex-row md:items-center md:justify-between md:gap-4 md:pb-6">
+            <div className="flex items-center gap-2.5">
+              <h2 className="text-base font-black text-gray-900 md:text-lg">담당 환자</h2>
+              <span className="rounded-full bg-teal-100 px-2.5 py-0.5 text-xs font-black text-teal-700">
+                {patients.length}명
+              </span>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {ownedCount > 0 && (
+                <Link
+                  href="/invite"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-black text-gray-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 md:text-sm"
+                >
+                  <Share2 className="h-3.5 w-3.5" />
+                  초대 코드 생성
+                </Link>
+              )}
+              <Link
+                href="/register?mode=join"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-black text-blue-700 transition-colors hover:bg-blue-100 md:text-sm"
+              >
+                <KeyRound className="h-3.5 w-3.5" />
+                코드로 참여
+              </Link>
+              <Link
+                href="/register"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2 text-xs font-black text-white shadow-sm transition-colors hover:bg-teal-700 md:text-sm"
+              >
+                <UserPlus className="h-3.5 w-3.5" />
+                새 환자 등록
+              </Link>
+            </div>
+          </div>
+        )}
 
         {patients.length === 0 ? (
-          <div className="flex flex-col items-center rounded-2xl border-2 border-dashed border-teal-200 bg-white px-6 py-12 text-center md:py-16">
+          <div className="flex flex-col items-center rounded-2xl border-2 border-dashed border-teal-200 bg-white px-6 py-12 text-center md:mx-auto md:max-w-lg md:py-16">
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-teal-50 md:h-20 md:w-20">
               <ClipboardList className="h-8 w-8 text-teal-600 md:h-10 md:w-10" />
             </div>
@@ -132,18 +166,27 @@ export default function HomeScreen() {
               등록된 환자가 없습니다
             </p>
             <p className="mt-2 text-xs font-bold leading-relaxed text-gray-500 md:text-sm">
-              환자를 등록하면 간병 인수인계 기록을 시작할 수 있습니다.
+              환자를 직접 등록하거나, 초대 코드로 참여할 수 있습니다.
             </p>
-            <Link
-              href="/register"
-              className="mt-6 flex items-center gap-2 rounded-xl bg-teal-600 px-6 py-3.5 text-sm font-black text-white shadow-md hover:bg-teal-700 md:px-8 md:py-4 md:text-base"
-            >
-              <UserPlus className="h-5 w-5" />
-              첫 환자 등록하기
-            </Link>
+            <div className="mt-6 flex w-full max-w-sm flex-col gap-2 sm:flex-row">
+              <Link
+                href="/register"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-teal-600 px-6 py-3.5 text-sm font-black text-white shadow-md hover:bg-teal-700 md:py-4 md:text-base"
+              >
+                <UserPlus className="h-5 w-5" />
+                환자 등록
+              </Link>
+              <Link
+                href="/register?mode=join"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-blue-200 bg-blue-50 px-6 py-3.5 text-sm font-black text-blue-700 hover:bg-blue-100 md:py-4 md:text-base"
+              >
+                <KeyRound className="h-5 w-5" />
+                코드로 참여
+              </Link>
+            </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
             {patients.map((patient) => {
               const gender = patient.gender === "male" ? "남" : "여";
               const isSelecting = selectingId === patient.id;
@@ -154,37 +197,36 @@ export default function HomeScreen() {
                   type="button"
                   disabled={!!selectingId}
                   onClick={() => handleSelectPatient(patient.id)}
-                  className="flex w-full items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4 text-left shadow-sm transition-all hover:border-teal-200 hover:shadow-md active:scale-[0.99] disabled:opacity-60 md:p-5"
+                  className="group flex w-full items-center gap-4 rounded-2xl border border-gray-200 bg-white p-4 text-left shadow-sm transition-all hover:border-teal-300 hover:shadow-md active:scale-[0.99] disabled:opacity-60 md:p-5"
                 >
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-teal-100 bg-teal-50 text-lg font-black text-teal-700 md:h-14 md:w-14">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-teal-100 bg-teal-50 text-lg font-black text-teal-700 transition-colors group-hover:border-teal-200 group-hover:bg-teal-100 md:h-14 md:w-14">
                     {patient.name.charAt(0)}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-base font-black text-gray-900 md:text-lg">
-                      {patient.name} 환자
-                    </p>
-                    <p className="text-xs font-bold text-gray-500 md:text-sm">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                      <p className="truncate text-base font-black text-gray-900 md:text-lg">
+                        {patient.name} 환자
+                      </p>
+                      {!patient.isOwner && (
+                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-black text-blue-700 md:text-xs">
+                          공유
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-0.5 text-xs font-bold text-gray-500 md:text-sm">
                       {patient.age}세 · {gender} · {formatRoomLabel(patient.room)}{" "}
                       {formatBedLabel(patient.bed)}
                     </p>
                   </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1">
-                    <span className="text-[10px] font-bold text-teal-600 md:text-xs">
+                  <div className="flex shrink-0 items-center gap-1 text-teal-600">
+                    <span className="text-[10px] font-bold md:text-xs">
                       {isSelecting ? "이동 중…" : "기록하기"}
                     </span>
-                    <ChevronRight className="h-5 w-5 text-gray-400" />
+                    <ChevronRight className="h-5 w-5 text-gray-400 transition-transform group-hover:translate-x-0.5 group-hover:text-teal-600" />
                   </div>
                 </button>
               );
             })}
-
-            <Link
-              href="/register"
-              className="flex min-h-[88px] w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-teal-400 bg-white py-3.5 text-sm font-black text-teal-700 hover:bg-teal-50 sm:col-span-2 xl:col-span-3 md:py-4 md:text-base"
-            >
-              <UserPlus className="h-5 w-5" />
-              새 환자 등록
-            </Link>
           </div>
         )}
       </AppPageMain>
